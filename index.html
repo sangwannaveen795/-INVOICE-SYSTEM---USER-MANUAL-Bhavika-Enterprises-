@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - Bhavika Enterprises</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50; /* Dark Blue */
+            --secondary-color: #e67e22; /* Orange */
+            --bg-color: #f4f6f8;
+            --border-color: #ddd;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 10px;
+            color: #333;
+        }
+
+        .invoice-container {
+            background: white;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            border-top: 5px solid var(--secondary-color);
+        }
+
+        /* --- Header Section --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .company-details h1 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 24px;
+            text-transform: uppercase;
+        }
+
+        .company-details h2 {
+            margin: 5px 0 0;
+            color: var(--secondary-color);
+            font-size: 28px;
+        }
+        
+        .contact-line {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+            font-weight: bold;
+            font-size: 15px;
+            color: #000;
+        }
+
+        .phone-icon {
+            color: #e91e63;
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        .invoice-meta {
+            text-align: right;
+            width: 300px;
+            flex-shrink: 0;
+        }
+
+        .input-group { 
+            margin-bottom: 10px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        label { 
+            font-weight: bold; 
+            font-size: 0.9em; 
+            color: #666;
+            margin-right: 10px;
+        }
+        
+        input {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .meta-input {
+            width: 160px;
+        }
+
+        /* --- Database / History Panel Styles --- */
+        .dashboard-menu {
+            margin-bottom: 20px; 
+            border-bottom: 1px dashed #ddd; 
+            padding-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .history-panel {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 8px;
+            display: none; /* Hidden by default */
+        }
+
+        .history-panel h3 { margin-top: 0; color: #856404; }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            background: white;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+        
+        .history-item:hover { background-color: #f9f9f9; }
+
+        .history-actions button {
+            margin-left: 5px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* --- Help Modal Styles --- */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.5); 
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; 
+            max-width: 600px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap; /* Keeps text formatting */
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover { color: black; }
+
+        /* --- Table Styles --- */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        
+        th { 
+            background-color: var(--primary-color) !important;
+            color: white !important; 
+            padding: 12px; 
+            text-align: left; 
+            font-size: 0.9em;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+        
+        .input-borderless {
+            border: 1px solid transparent !important;
+            background: transparent;
+            font-size: 1em;
+            width: 100%;
+            outline: none;
+        }
+        
+        .input-borderless:focus {
+            border-bottom: 1px solid var(--secondary-color) !important;
+        }
+
+        /* --- Payment Section --- */
+        .payment-info {
+            margin-top: 30px;
+            background-color: #f8f9fa;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            page-break-inside: avoid;
+        }
+        
+        .payment-info h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .payment-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .payment-col { flex: 1; min-width: 200px; }
+        .payment-col p { margin: 5px 0; font-size: 14px; color: #555; }
+        .payment-col strong { color: #333; width: 140px; display: inline-block; }
+
+        .upi-highlight {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* --- Buttons --- */
+        .btn { padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-add { background-color: var(--secondary-color); }
+        .btn-print { background-color: var(--primary-color); }
+        .btn-save { background-color: #27ae60; } /* Green */
+        .btn-history { background-color: #7f8c8d; } /* Grey */
+        .btn-help { background-color: #8e44ad; } /* Purple */
+        .btn-danger { background-color: #ffebee; color: #d32f2f; border: 1px solid #ffcdd2; padding: 5px 10px; border-radius: 4px; }
+        .btn-load { background-color: #3498db; color: white; border: none; border-radius: 3px; }
+        .btn-del { background-color: #e74c3c; color: white; border: none; border-radius: 3px; }
+
+        /* --- Mobile Responsive --- */
+        @media screen and (max-width: 768px) {
+            .invoice-container { padding: 15px; }
+            header { flex-direction: column; }
+            .invoice-meta { width: 100%; text-align: left; margin-top: 10px; }
+            
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { position: absolute; top: -9999px; left: -9999px; }
+            
+            tr { margin-bottom: 15px; border: 1px solid #ddd; padding: 10px; border-radius: 8px; }
+            td { display: flex; align-items: center; border: none; padding: 5px 0; }
+            td::before { content: attr(data-label); font-weight: bold; width: 90px; color: #777; }
+            
+            .input-borderless { border: 1px solid #eee !important; padding: 8px; }
+            tfoot tr { display: flex; justify-content: space-between; }
+            .dashboard-menu { justify-content: space-between; }
+            .btn { width: 48%; margin-bottom: 5px; font-size: 14px; padding: 10px; }
+        }
+
+        /* --- PRINT STYLES --- */
+        @media print {
+            body { background-color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .invoice-container { box-shadow: none; margin: 0; width: 100%; max-width: 100%; padding: 0; border: none; }
+            .no-print { display: none !important; }
+            .history-panel { display: none !important; }
+            .modal { display: none !important; }
+            
+            table { display: table !important; width: 100%; }
+            thead { display: table-header-group !important; }
+            tbody { display: table-row-group !important; }
+            tr { display: table-row !important; border: none; }
+            td { display: table-cell !important; padding: 8px; border-bottom: 1px solid #eee; }
+            td::before { display: none !important; }
+            
+            th { background-color: #2c3e50 !important; color: white !important; }
+            input { border: none !important; padding: 0; }
+            .input-group input { text-align: right; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="invoice-container">
+        <div class="dashboard-menu no-print">
+            <button class="btn btn-save" onclick="saveInvoice()">💾 Save Invoice</button>
+            <button class="btn btn-history" onclick="toggleHistory()">📂 Saved Invoices</button>
+            <button class="btn btn-add" onclick="resetInvoice()" style="background-color: #95a5a6;">✨ New Blank</button>
+            <button class="btn btn-help" onclick="toggleHelp()">❓ Help / Manual</button>
+        </div>
+
+        <div id="historyPanel" class="history-panel no-print">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>Saved Invoices Database</h3>
+                <button onclick="toggleHistory()" style="padding: 5px 10px; cursor:pointer;">Close</button>
+            </div>
+            <div id="historyList" class="history-list">
+                <div style="padding:10px;">No invoices saved yet.</div>
+            </div>
+        </div>
+
+        <div id="helpModal" class="modal no-print">
+            <div class="modal-content">
+                <span class="close-modal" onclick="toggleHelp()">&times;</span>
+                <h2>INVOICE SYSTEM - USER MANUAL</h2>
+                <hr>
+                <strong>HOW TO USE:</strong><br><br>
+                <strong>STEP 1: FILL CUSTOMER DETAILS</strong><br>
+                - Enter "Customer Name" in top right.<br>
+                - "Date" is auto-set. "Invoice No" is auto-generated.<br><br>
+                <strong>STEP 2: ADD ITEMS</strong><br>
+                - Type "Item Name", "Qty", and "Price".<br>
+                - Total updates instantly.<br>
+                - Click "+ Add Item" for more rows.<br><br>
+                <strong>STEP 3: SAVE (DATABASE)</strong><br>
+                - Click Green "💾 Save Invoice" button.<br>
+                - Saves to browser memory.<br><br>
+                <strong>STEP 4: VIEW OLD INVOICES</strong><br>
+                - Click Grey "📂 Saved Invoices".<br>
+                - Click "Load" to edit/print old ones.<br><br>
+                <strong>⚠️ IMPORTANT:</strong> Data is saved in this browser only. Clearing cache deletes data.
+            </div>
+        </div>
+
+        <header>
+            <div class="company-details">
+                <h1>INVOICE</h1>
+                <h2>Bhavika Enterprises</h2>
+                <div class="contact-line">
+                    <span class="phone-icon">📞</span> 
+                    Contact / WhatsApp: 9057585330
+                </div>
+            </div>
+            <div class="invoice-meta">
+                <div class="input-group">
+                    <label>Date:</label>
+                    <input type="date" id="invoiceDate" class="meta-input">
+                </div>
+                <div class="input-group">
+                    <label>Customer:</label>
+                    <input type="text" id="customerName" placeholder="Enter Name" class="meta-input">
+                </div>
+                <div class="input-group">
+                    <label>Inv No:</label>
+                    <input type="text" id="invoiceNo" placeholder="Auto" class="meta-input">
+                </div>
+            </div>
+        </header>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 35%;">Item Name</th>
+                    <th style="width: 15%;">Date</th>
+                    <th style="width: 10%;">Qty</th>
+                    <th style="width: 15%;">Price (₹)</th>
+                    <th style="width: 20%;" class="text-right">Total</th>
+                    <th style="width: 5%;" class="no-print">Action</th>
+                </tr>
+            </thead>
+            <tbody id="invoiceItems">
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="4" class="text-right" style="text-align: right !important;">Grand Total:</td>
+                    <td class="text-right">₹<span id="grandTotal">0.00</span></td>
+                    <td class="no-print"></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="payment-info">
+            <h3>Payment Information</h3>
+            <div class="payment-grid">
+                <div class="payment-col">
+                    <p><strong>Bank:</strong> Paytm Payments Bank</p>
+                    <p><strong>Account Name:</strong> Naveen Sangwan</p>
+                    <p><strong>Account No:</strong> 1776109005018</p>
+                </div>
+                <div class="payment-col">
+                    <p><strong>Phone Pay:</strong> 9057585330</p>
+                    <p><strong>UPI ID:</strong> <span class="upi-highlight">sangwannaveen795@okaxis</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="no-print" style="margin-top: 20px;">
+            <button class="btn btn-add" onclick="addItem()">+ Add Item</button>
+            <button class="btn btn-print" onclick="window.print()">Print Invoice</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Basic Invoice Functions ---
+        document.getElementById('invoiceDate').valueAsDate = new Date();
+        document.getElementById('invoiceNo').value = "INV-" + Math.floor(1000 + Math.random() * 9000);
+
+        function addItem(name='', date='', qty=1, price=0) {
+            const tbody = document.getElementById('invoiceItems');
+            const row = document.createElement('tr');
+            const dateVal = date ? date : new Date().toISOString().split('T')[0];
+
+            row.innerHTML = `
+                <td data-label="Item Name"><input type="text" placeholder="Item" class="input-borderless" value="${name}"></td>
+                <td data-label="Date"><input type="date" class="item-date input-borderless" value="${dateVal}"></td>
+                <td data-label="Quantity"><input type="number" value="${qty}" min="1" oninput="calculateTotal()" class="qty input-borderless"></td>
+                <td data-label="Price (₹)"><input type="number" value="${price}" min="0" oninput="calculateTotal()" class="price input-borderless"></td>
+                <td data-label="Total" class="text-right">₹<span class="row-total">0.00</span></td>
+                <td class="no-print"><button class="btn btn-danger" onclick="removeItem(this)">X</button></td>
+            `;
+            tbody.appendChild(row);
+            calculateTotal();
+        }
+
+        function removeItem(btn) {
+            btn.closest('tr').remove();
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            let grandTotal = 0;
+            document.querySelectorAll('#invoiceItems tr').forEach(row => {
+                const qty = parseFloat(row.querySelector('.qty').value) || 0;
+                const price = parseFloat(row.querySelector('.price').value) || 0;
+                const total = qty * price;
+                row.querySelector('.row-total').textContent = total.toFixed(2);
+                grandTotal += total;
+            });
+            document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
+        }
+
+        function resetInvoice() {
+            if(!confirm("Clear current invoice?")) return;
+            document.getElementById('customerName').value = "";
+            document.getElementById('invoiceNo').value = "INV-" + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('invoiceItems').innerHTML = "";
+            addItem();
+        }
+
+        // --- 2. Database / Save Functions (LocalStorage) ---
+
+        function saveInvoice() {
+            const customerName = document.getElementById('customerName').value;
+            if(!customerName) { alert("Please enter a Customer Name to save."); return; }
+
+            const invoiceData = {
+                id: Date.now(),
+                date: document.getElementById('invoiceDate').value,
+                invoiceNo: document.getElementById('invoiceNo').value,
+                customer: customerName,
+                items: []
+            };
+
+            document.querySelectorAll('#invoiceItems tr').forEach(row => {
+                invoiceData.items.push({
+                    name: row.querySelector('input[type="text"]').value,
+                    date: row.querySelector('.item-date').value,
+                    qty: row.querySelector('.qty').value,
+                    price: row.querySelector('.price').value
+                });
+            });
+
+            let db = JSON.parse(localStorage.getItem('invoiceDB')) || [];
+            db.push(invoiceData);
+            localStorage.setItem('invoiceDB', JSON.stringify(db));
+            
+            alert("Invoice Saved Successfully!");
+            renderHistory();
+        }
+
+        function toggleHistory() {
+            const panel = document.getElementById('historyPanel');
+            panel.style.display = (panel.style.display === "none" || panel.style.display === "") ? "block" : "none";
+            if(panel.style.display === "block") renderHistory();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            let db = JSON.parse(localStorage.getItem('invoiceDB')) || [];
+            
+            if(db.length === 0) {
+                list.innerHTML = '<div style="padding:10px;">No saved invoices.</div>';
+                return;
+            }
+
+            db.reverse(); 
+            let html = '';
+            db.forEach(inv => {
+                let total = inv.items.reduce((sum, item) => sum + (item.qty * item.price), 0);
+                html += `
+                    <div class="history-item">
+                        <div>
+                            <strong>${inv.customer}</strong> <br>
+                            <small>${inv.date} | ${inv.invoiceNo} | ₹${total}</small>
+                        </div>
+                        <div class="history-actions">
+                            <button class="btn-load" onclick="loadInvoice(${inv.id})">Load</button>
+                            <button class="btn-del" onclick="deleteInvoice(${inv.id})">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        function loadInvoice(id) {
+            let db = JSON.parse(localStorage.getItem('invoiceDB')) || [];
+            const inv = db.find(i => i.id === id);
+            
+            if(inv) {
+                if(!confirm("Load this invoice? Unsaved changes will be lost.")) return;
+                document.getElementById('invoiceDate').value = inv.date;
+                document.getElementById('customerName').value = inv.customer;
+                document.getElementById('invoiceNo').value = inv.invoiceNo;
+                const tbody = document.getElementById('invoiceItems');
+                tbody.innerHTML = "";
+                inv.items.forEach(item => addItem(item.name, item.date, item.qty, item.price));
+                document.getElementById('historyPanel').style.display = "none";
+            }
+        }
+
+        function deleteInvoice(id) {
+            if(!confirm("Delete this saved invoice?")) return;
+            let db = JSON.parse(localStorage.getItem('invoiceDB')) || [];
+            db = db.filter(i => i.id !== id);
+            localStorage.setItem('invoiceDB', JSON.stringify(db));
+            renderHistory();
+        }
+
+        // --- 3. Help Manual Function ---
+        function toggleHelp() {
+            const modal = document.getElementById('helpModal');
+            modal.style.display = (modal.style.display === "none" || modal.style.display === "") ? "block" : "none";
+        }
+
+        // Close modal if user clicks outside content
+        window.onclick = function(event) {
+            const modal = document.getElementById('helpModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // Initialize
+        addItem();
+    </script>
+</body>
+</html>
